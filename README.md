@@ -5,3 +5,5 @@ The Cancer Outlier Profile Analysis (COPA) is a common analysis to identify gene
 
 OPPAR can also be used for Gene Set Enrichment Analysis (GSEA). Here, a modified version of [GSVA](http://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7) method is implemented. GSVA can be used to determine which samples in the study are enriched for gene expression signatures that are of interest. The `gsva` function in GSVA package returns an enrichment score for each sample, for the given signatures/gene sets. With the current implementation of the method, samples that strongly show enrichment for down(-regulated) gene expression signatures will receive negative scores.
 However, Often it is in the interest of the biologists and researchers to get positive scores for samples that are enriched in both up and down signatures. Therefore, the `gsva` function has been modified to assign positive scores to samples that are enriched for the up-regulated and down-regulated gene expression signatures.
+
+See Github Wiki for an example workflow.
