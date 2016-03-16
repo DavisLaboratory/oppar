@@ -1,5 +1,5 @@
 #oppar
-##Outlier Profile and Pathway Analysis in R
+**Outlier Profile and Pathway Analysis in R**
 
 OPPAR is the R implementation of the modified Cancer Outlier Profile Analysis [(mCOPA)](http://jclinbioinformatics.biomedcentral.com/articles/10.1186/2043-9113-2-22) method, published by Wang et al. in 2012.
 
@@ -19,6 +19,6 @@ For a complete example workflow, and to learn about how `oppar` works, please re
 
 To report bugs or for any other enquiries, please email hediyehzadeh.s@wehi.edu.au
 
-#### Release notes:
+**Release notes:**
 The current version of the package does not include the `gsva` function for Gene Set Enrichment Analysis. However, examples are provided in the [Wiki](https://github.com/DavisLaboratory/oppar/wiki) which suggest how `oppar` can be used in conjuction with other packages such as `limma` for gene set testing.
 
