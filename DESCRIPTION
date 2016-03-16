@@ -1,0 +1,39 @@
+Package: oppar
+Type: Package
+Title: Outlier profile and pathway analysis in R
+Version: 0.99.0
+Date: 2012
+Authors@R: c(
+    person("Chenwei", "Wang", email = "chenwei.wang@qut.edu.au", role = "aut"),
+    person("Alperen", "Taciroglu", role = "aut"),
+    person("Stefan R", "Maetschke", role = "aut"),
+    person("Colleen C", "Nelson", role = "aut"),
+    person("Mark", "Ragan", role = "aut"),
+    person("Melissa", "Davis", email = "davis.m@wehi.edu.au", role = "aut"),
+    person("Soroor", "Hediyeh zadeh", email = "hediyehzadeh.s@wehi.edu.au",role = "cre"),
+    person("Momeneh","Foroutan", email= "mforoutan@student.unimelb.edu.au", role = "ctr"))
+Description: A R implementation of mCOPA package published by Wang et al.
+    (2012).
+Imports:
+    Biobase,
+    methods
+License: GPL-2
+LazyData: true
+Collate:
+    'class_OPPARList.R'
+    'class_nuchar.R'
+    'getSampleOutlier.R'
+    'getSubtypeProbes.R'
+    'opa-generic-methods.R'
+    'utils.R'
+RoxygenNote: 5.0.1
+Suggests:
+    knitr,
+    rmarkdown,
+    RColorBrewer,
+    gplots,
+    GEOquery,
+    limma,
+    org.Hs.eg.db,
+    genefilter
+VignetteBuilder: knitr

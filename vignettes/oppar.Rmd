@@ -1,0 +1,307 @@
+---
+title: "OPPAR: Outlier Profile and Pathway Analysis in R"
+author: "Soroor Hediyehzadeh"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{OPPAR: Outlier Profile and Pathway Analysis in R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Cancer Outlier Profile Analysis (COPA) is a common analysis to identify genes that might be down-regulated or up-regulated only in a proportion of samples with the codition of interest. OPPAR is the R implementation of modified COPA [(mCOPA)](http://jclinbioinformatics.biomedcentral.com/articles/10.1186/2043-9113-2-22) method, originally published by Chenwei Wang et la. in 2012. The aim is to identify genes that are outliers in samples with condition of interest, compared to normal samples. The methods implemented in OPPAR enable the users to perform the analysis in various ways, namely detecting outlier features in control versus condition samples (whether or not there is a information on subtypes), and detecting genes that are outlier in one subtype compared to the other samples, if the subtypes are known. 
+
+OPPAR can also be used for Gene Set Enrichment Analysis (GSEA). Here, a modified version of [GSVA](http://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7) method is implemented. GSVA can be used to determine which samples in the study are enriched for gene expression signatures that are of interest. The `gsva` function in GSVA package returns an enrichment score for each sample, for the given signatures/gene sets. With the current implementation of the method, samples that strongly show enrichment for down(-regulated) gene expression signatures will receive negative scores.
+However, Often it is in the interest of the biologists and researchers to get positive scores for samples that are enriched in both up and down signatures. Therefore, the `gsva` function has been modified to assign positive scores to samples that are enriched for the up-regulated and down-regulated gene expression signatures.
+
+OPPAR comes with four functions: 
+
+- `opa()` generates the outlier profile
+- `getSampleOutlier()` is used to extract the outliers detected for a given sample(s)
+- `getSubtypeProbes()` is used to extract the outliers for a group of related samples e.g subtypes
+- `mgsva()` the modified gsva function ( work in progress)
+
+
+This vignette illustrates a possible workflow for OPPAR, using [Breast Cancer Metastasis data](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE46141), and [Tomlins et al.](http://www.nature.com/ng/journal/v39/n1/full/ng1935.html) prostate cancer [data](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE6099).
+
+
+
+
+
+## Outlier Profile Analysis by `opa()`
+
+`opa` returns the outlier profile matrix, which is a matrix of -1 ( for down-regulated outliers), 0 ( not an outlier) and 1 (up-regulated outlier). For more information see `?opa`
+```{r, echo=FALSE, cache=TRUE}
+require(knitr)
+knitr::opts_chunk$set(message = FALSE, 
+											library(oppar), 
+											suppressPackageStartupMessages(library(Biobase)),
+											suppressPackageStartupMessages(library(limma)),
+											suppressPackageStartupMessages(library(genefilter)),
+											suppressPackageStartupMessages(library(org.Hs.eg.db)),
+											suppressPackageStartupMessages(library(genefilter)),
+											suppressPackageStartupMessages(library(gplots)))
+
+```
+
+
+
+```{r, echo = FALSE}
+library(oppar)
+library(Biobase)
+library(GEOquery)
+
+# cache reading the data ??
+cache(g <- getGEO("GSE46141"), dir = "./data", "GSE46141") # downloads data from GEO
+e <- g[[1]] # extracts the gene expression matrix as an ExpressionSet object
+```
+
+```{r, eval=FALSE}
+library(oppar)
+library(Biobase)
+library(GEOquery)
+
+g <- getGEO("GSE46141") # downloads data from GEO
+e <- g[[1]] # extracts the gene expression matrix as an ExpressionSet object
+
+```
+
+```{r, cache= TRUE, message= TRUE}
+# defining the group variable
+group <- sapply(pData(e)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
+group <- factor(group)
+
+# running opa with default values for lower. quantile = 0.05 
+# and upper.quantile = 0.95 . see ?opa for more information
+bcm.opa <- opa(e,group=group)
+bcm.opa
+
+```
+
+The matrix containing the outlier profiles is called `profileMatrix` and can be accessed using the $ operator.
+The `upper.quantile` and `lower.quantile` parameters used to run the function can also be retrieved using this
+operator.
+
+```{r}
+bcm.opa$profileMatrix[1:6,1:5]
+bcm.opa$upper.quantile
+bcm.opa$lower.quantile
+```
+
+Genes with high variations across samples, that also are outliers, may provide interesting insights into biological systems driving metastatatic spread of breat cancer tumors to other tissues. Here we select the top 500 genes with high variances.
+
+```{r}
+library(genefilter)
+gene.vars <- rowSds(exprs(e))
+# order genes with respect to standard deviations
+idx <- order(gene.vars, decreasing = TRUE)[1:500]
+sum(fData(e)$ID[idx] %in% rownames(bcm.opa$profileMatrix))
+
+idx2 <- which(rownames(bcm.opa$profileMatrix) %in% fData(e)$ID[idx])
+
+fData(e)$GeneSymbol[idx][which(fData(e)$ID[idx] %in% rownames(bcm.opa$profileMatrix))]
+```
+
+Below is a heatmap of the detected outlier probes . The heatmap suggests that outlier probes, which also have high variations across samples, have higher expression values in liver samples, but are expressed at low levels in other samples. These outlier probes can also cluster the liver samples together. This may suggests that breast cancer tumors metastasizing to liver may have a distinct outlier profile compared to tumors metastasizing to other tissues.
+
+```{r, fig.height = 7, fig.width = 7}
+
+# what are subtypes here
+library(RColorBrewer)
+library(gplots)
+subtypes <- unique(pData(e)$source_name_ch1)
+hmcol <- colorRampPalette(brewer.pal(9,"GnBu"))(100)
+cols <- palette(brewer.pal(8,"Dark2"))[as.numeric(pData(e)$source_name)]
+cols <- palette(brewer.pal(8,"Dark2"))[as.numeric(pData(e)$source_name)]
+
+heatmap.2(exprs(e)[rownames(exprs(e)) %in% rownames(bcm.opa$profileMatrix[idx2,]), ],
+					trace = "none",
+					ColSideColors = cols,
+					col = hmcol,
+					Rowv = TRUE,
+					Colv = TRUE,
+					labRow = fData(e)$GeneSymbol[rownames(exprs(e)) %in% rownames(bcm.opa$profileMatrix[idx2,])],
+					cexRow = 0.6)
+legend("topright",legend= as.character(subtypes),
+       fill=c("#E7298A","#7570B3","#E6AB02","gray40","#A6761D",
+       			 "#D95F02","#1B9E77","#66A61E"),
+       border=FALSE, bty="n", y.intersp = 0.8, cex=0.4)
+
+```
+
+## getSubtypeProbes()
+
+The outlier profile for liver samples can be extracted using `getSubtypeProbes`. One can then use this information to see what Gene Ontology (GO) terms or pathways these outliers are enriched for.
+
+
+```{r}
+#get the index of the samples taken from liver
+index <- which(pData(e)$source_name_ch1 == "liver")
+samples <- rownames(pData(e)[index,])
+samples <- match(samples, colnames(bcm.opa$profileMatrix))
+samples <- Reduce(c,samples)
+
+liver.subtype.outlier <- getSubtypeProbes(bcm.opa, samples)
+
+# matching probe names
+liver.subtype.withAnno <- lapply(liver.subtype.outlier,
+																function(x){
+																	droplevels(fData(e)$GeneSymbol[rownames(fData(e)) %in% x])
+																	})
+liver.subtype.withAnno
+
+```
+
+
+
+## getSampleOutlier()
+
+`getSampleOutlier` retrieves the individual outlier profiles for one or more samples. Either sample names, or their corresponding indices in the `profileMatrix` can be used to extract sample-specific profiles.
+Here, we retrieve the outlier profile for sample "GSM1124899"
+
+```{r}
+getSampleOutlier(bcm.opa, "GSM1124899")
+
+```
+
+
+
+----
+
+# Analysis of Tomlins et al. prostate cancer dataset
+
+Data was retrieved from GEO database, checked for normalization and subsetted according to procedure outlined
+in the mCOPA paper. In addition, probes with no annotation were removed. The `impute` package was used to impute the missing values using K-nearest neighbours method (k = 10). The subsetted dataset is available in the package as a sample data, and contains an ExpressionSet object, storing information on samples, genes and gene expressions. We apply `opa` on Tomlins et al. data, then use `getSubtypeProbes` to get all down- regulated and all up-regulated outliers.
+
+```{r, echo= FALSE, eval=FALSE}
+library(oppar)
+library(limma)
+library(GEOquery)
+cache(tomlins <- getGEO("GSE6099"), dir = "./data", "GSE6099")
+eset <- tomlins[[1]]
+eset <- eset[rownames(exprs(eset)) %in% prob.names, colnames(exprs(eset)) %in% sample.names]
+# remove probes with no gene annotation
+eset <- eset[-idx2,]
+
+library(impute)
+exprs(eset) <- impute.knn(exprs(eset))$data
+save(eset,file ="data/Tomlins.RData")
+
+```
+
+```{r}
+library(oppar)
+data(Tomlins) # loads processed Tomlins data
+
+# the first 21 samples are Normal samples, and the rest of 
+# the samples are our cases (metastatic). We, thus, generate a group
+# variable for the samples based on this knowledge.
+
+g <- factor(c(rep(0,21),rep(1,ncol(exprs(eset)) - 21)))
+g
+
+
+# Apply opa on Tomlins data, to detect outliers relative to the
+# lower 10% (lower.quantile = 0.1) and upper 5% (upper.quantile = 0.95 -- Default) of 
+# gene expressions.
+tomlins.opa <- opa(eset, group = g, lower.quantile = 0.1)
+tomlins.opa
+
+# use getSubtypeProbes() to extract all down-regulated and all up-regulated outliers
+outlier.list <- getSubtypeProbes(tomlins.opa, 1:ncol(tomlins.opa$profileMatrix))
+```
+
+We can then obtain a list of GO terms from `org.Hs.eg.db`. Each element of the list will be a GO terms with the Entrez gene IDs corresponding to that term. We can the apply `mroast` from `limma` package for multiple gene set enrichment testing.
+
+```{r}
+# gene set testing with limma::mroast
+#biocLite(org.Hs.eg.db)
+library(org.Hs.eg.db)
+library(limma)
+org.Hs.egGO2EG
+go2eg <- as.list(org.Hs.egGO2EG)
+head(go2eg)
+
+# Gene Set analysis using rost from limma
+
+# need to subset gene express data based on up outliers
+up.mtrx <- exprs(eset)[fData(eset)$ID %in% outlier.list[["up"]], ]
+# get Entrez gene IDs for genes in up.mtrx
+
+entrez.ids.up.mtrx <- fData(eset)$Gene.ID[fData(eset)$ID %in% rownames(up.mtrx)]
+
+# find the index of genes in GO gene set in the gene expression matrix
+gset.idx <- lapply(go2eg, function(x){
+	match(x, entrez.ids.up.mtrx)
+})
+
+# remove missing values
+gset.idx <- lapply(gset.idx, function(x){
+	x[!is.na(x)]
+})
+
+# removing gene sets with less than 10 elements
+gset.ls <- unlist(lapply(gset.idx, length))
+gset.idx <- gset.idx[which(gset.ls > 10)]
+
+# need to define a model.matrix for mroast
+design <- model.matrix(~ g)
+up.mroast <- mroast(up.mtrx, index = gset.idx, design = design) 
+head(up.mroast, n=5)
+```
+
+The GO terms for the first 10 GO Ids detected by `mroast` can be retrieved in the following way.
+
+```{r}
+go.terms <- rownames(up.mroast[1:10,])
+#biocLite(GO.db)
+library(GO.db)
+columns(GO.db)
+keytypes(GO.db)
+
+r2tab <- select(GO.db, keys=go.terms,
+                columns=c("GOID","TERM"), 
+                keytype="GOID")
+r2tab
+```
+
+We repeating the above steps for down-regulated outliers, to see what GO terms they are enriched for.
+
+```{r}
+library(org.Hs.eg.db)
+library(limma)
+org.Hs.egGO2EG
+go2eg <- as.list(org.Hs.egGO2EG)
+head(go2eg)
+# subsetting gene expression matrix based on down outliers
+down_mtrx <- exprs(eset)[fData(eset)$ID %in% outlier.list[["down"]], ]
+entrez_ids_down_mtrx <- fData(eset)$Gene.ID[fData(eset)$ID %in% rownames(down_mtrx)]
+
+gset_idx_down <- lapply(go2eg, function(x){
+	match(x, entrez_ids_down_mtrx)
+})
+
+# remove missing values
+gset_idx_down <- lapply(gset_idx_down, function(x){
+	x[!is.na(x)]
+})
+
+# removing gene sets with less than 10 elements
+gset_ls_down <- unlist(lapply(gset_idx_down, length))
+gset_idx_down <- gset_idx_down[which(gset_ls_down > 10)]
+
+# apply mroast
+down_mroast <- mroast(down_mtrx, gset_idx_down, design) 
+head(down_mroast, n=5)
+```
+
+And extract GO terms for the top 10 results:
+```{r}
+go_terms_down <- rownames(down_mroast[1:10,])
+
+dr2tab <- select(GO.db, keys=go_terms_down,
+                columns=c("GOID","TERM"), 
+                keytype="GOID")
+dr2tab
+
+```

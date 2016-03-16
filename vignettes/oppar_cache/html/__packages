@@ -1,0 +1,15 @@
+base
+knitr
+oppar
+BiocGenerics
+Biobase
+GEOquery
+limma
+genefilter
+S4Vectors
+IRanges
+AnnotationDbi
+DBI
+RSQLite
+org.Hs.eg.db
+gplots
