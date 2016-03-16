@@ -12,10 +12,11 @@ Enter the following lines in R/Rstudio to download and install the source code f
 library(devtools)
 install_github("DavisLaboratory/oppar", build_vignettes = TRUE)
 library(oppar)
+browseVignettes(package = "oppar") # opens up package vignette 
 ```
 
 
-For a complete example workflow, and to learn about how `oppar` works, please refer to the [Wiki](https://github.com/DavisLaboratory/oppar/wiki).
+For a complete example workflow, and to learn about how `oppar` works, please refer to the package vignette or [Wiki](https://github.com/DavisLaboratory/oppar/wiki).
 
 To report bugs or for any other enquiries, please email hediyehzadeh.s@wehi.edu.au
 
