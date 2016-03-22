@@ -19,12 +19,14 @@ opa(exprs.matrix, ...)
 \item{exprs.matrix}{Gene expression data. Can be either a matrix or an
 object of type ExpressionSet.}
 
+\item{...}{Numeric. To supply values for upper.quantile and lower.quantile
+arguments if default values are going to be override.}
+
 \item{group}{A vector of factors representing the groups to which each sample belong.
 This can be either a vector of 0s and 1s, or normal and cases.}
 
 \item{upper.quantile}{Numeric. The cut-off for upper quantile when determining outliers.
- Default to 0.95
-@param ... If neither upper.quantile or lower.quantile are supplied, default values are used.}
+Default to 0.95}
 
 \item{lower.quantile}{Numeric. The cut-off for lower quantile when determining outliers.
 Default to 0.05}
@@ -49,15 +51,19 @@ that the gene is a down-regulated outlier, 1 indicates an up-regulate outlier an
 }}
 \examples{
 # loading eset object from GSE46141 dataset
-data(GSE46141g)
-eset <- g[[1]]
+data(GSE46141)
 library(Biobase)
 # defining the group variable. local breast tumors are the controls
 # and the rest of the samples are the diseased samples
-group <- sapply(pData(eset)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
+group <- sapply(pData(e)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
 group <- factor(group)
 # running opa with default values (i.e upper.quantile = 0.95, lower.quantile = 0.05)
 # the result is an object of type OPPARList
-opa(eset,group = group)
+opa(e,group = group)
+}
+\seealso{
+Wang, C., Taciroglu, A., Maetschke, S. R., Nelson, C. C., Ragan, M. A., & Davis, M. J. (2012).
+    mCOPA: analysis of heterogeneous features in cancer expression data. Journal
+    of Clinical Bioinformatics, 2, 22. http://doi.org/10.1186/2043-9113-2-22
 }
 

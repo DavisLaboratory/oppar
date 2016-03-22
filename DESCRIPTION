@@ -14,26 +14,35 @@ Authors@R: c(
     person("Momeneh","Foroutan", email= "mforoutan@student.unimelb.edu.au", role = "ctr"))
 Description: A R implementation of mCOPA package published by Wang et al.
     (2012).
+biocViews: Pathways, GeneSetEnrichment, SystemsBiology, Software
+Depends:
+    R (>= 3.2)
 Imports:
     Biobase,
-    methods
+    methods,
+    GSEABase,
+    GSVA
 License: GPL-2
 LazyData: true
 Collate:
     'class_OPPARList.R'
     'class_nuchar.R'
+    'e.R'
+    'es.dif.R'
+    'eset.R'
     'getSampleOutlier.R'
     'getSubtypeProbes.R'
+    'gsva.R'
+    'maupin.R'
     'opa-generic-methods.R'
+    'oppar.R'
     'utils.R'
+    'zzz.R'
 RoxygenNote: 5.0.1
 Suggests:
     knitr,
     rmarkdown,
-    RColorBrewer,
-    gplots,
-    GEOquery,
     limma,
     org.Hs.eg.db,
-    genefilter
+    GO.db
 VignetteBuilder: knitr

@@ -13,12 +13,11 @@ NULL
 #'    up-regulated and down-regulated outlier genes.
 #' @export
 #' @examples
-#' data(GSE46141g)
+#' data(GSE46141)
 #' library(Biobase)
-#' eset <- g[[1]]
-#' group <- sapply(pData(eset)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
+#' group <- sapply(pData(e)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
 #' group <- factor(group)
-#' bcm.opa <- opa(eset,group=group)
+#' bcm.opa <- opa(e,group=group)
 #' # Outlier profile for sample "GSM1124929"
 #' getSampleOutlier(bcm.opa, "GSM1124929")
 #'

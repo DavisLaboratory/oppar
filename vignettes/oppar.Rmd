@@ -16,181 +16,53 @@ However, Often it is in the interest of the biologists and researchers to get po
 
 OPPAR comes with four functions: 
 
-- `opa()` generates the outlier profile
-- `getSampleOutlier()` is used to extract the outliers detected for a given sample(s)
-- `getSubtypeProbes()` is used to extract the outliers for a group of related samples e.g subtypes
-- `mgsva()` the modified gsva function ( work in progress)
+- **opa()** generates the outlier profile using the method described in    [mcopa](http://jclinbioinformatics.biomedcentral.com/articles/10.1186/2043-9113-2-22)
+- **getSampleOutlier()** is used to extract the outliers detected for a given sample(s)
+- **getSubtypeProbes()** is used to extract the outliers for a group of related samples e.g subtypes
+- **gsva()** A modified version of gsva function in GSVA package is presented here.
+    The original function returns negative enrichment scores (es) for samples 
+    that are enriched for a gene list of down-regulated gene signature.
+    However, it is often of interest of researchers to obtain positive scores 
+    for samples that are enriched in both up gene signatures and down gene signatures.
+    In the modified version the ranking is reversed for the genes in down gene signature,
+    such that they recieve high ranks and, therefore, high es scores. The es scores for 
+    samples in down gene signature is then added to the es scores in up gene signature
+    resulting in large positive es scores for samples displaying enrichment in both up-
+    regulated genes and down-regulated genes in a given gene signature.
 
 
-This vignette illustrates a possible workflow for OPPAR, using [Breast Cancer Metastasis data](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE46141), and [Tomlins et al.](http://www.nature.com/ng/journal/v39/n1/full/ng1935.html) prostate cancer [data](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE6099).
+This vignette illustrates a possible workflow for OPPAR, using [Tomlins et al.](http://www.nature.com/ng/journal/v39/n1/full/ng1935.html) prostate cancer [data](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE6099). In addition, 
+[Maupin](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE23952)'s TGFb data have been analyzed for enrichement of a TGFb gene signature in the samples measured in this study.
 
-
-
-
-
-## Outlier Profile Analysis by `opa()`
-
-`opa` returns the outlier profile matrix, which is a matrix of -1 ( for down-regulated outliers), 0 ( not an outlier) and 1 (up-regulated outlier). For more information see `?opa`
-```{r, echo=FALSE, cache=TRUE}
-require(knitr)
-knitr::opts_chunk$set(message = FALSE, 
-											library(oppar), 
-											suppressPackageStartupMessages(library(Biobase)),
-											suppressPackageStartupMessages(library(limma)),
-											suppressPackageStartupMessages(library(genefilter)),
-											suppressPackageStartupMessages(library(org.Hs.eg.db)),
-											suppressPackageStartupMessages(library(genefilter)),
-											suppressPackageStartupMessages(library(gplots)))
-
-```
+**Please note although the analysis presented here have been done on microarray studies,
+one can apply oppar tools to RPKM values of gene expression measurements in NGS studies.**
 
 
 
-```{r, echo = FALSE}
-library(oppar)
-library(Biobase)
-library(GEOquery)
-
-# cache reading the data ??
-cache(g <- getGEO("GSE46141"), dir = "./data", "GSE46141") # downloads data from GEO
-e <- g[[1]] # extracts the gene expression matrix as an ExpressionSet object
-```
-
-```{r, eval=FALSE}
-library(oppar)
-library(Biobase)
-library(GEOquery)
-
-g <- getGEO("GSE46141") # downloads data from GEO
-e <- g[[1]] # extracts the gene expression matrix as an ExpressionSet object
-
-```
-
-```{r, cache= TRUE, message= TRUE}
-# defining the group variable
-group <- sapply(pData(e)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
-group <- factor(group)
-
-# running opa with default values for lower. quantile = 0.05 
-# and upper.quantile = 0.95 . see ?opa for more information
-bcm.opa <- opa(e,group=group)
-bcm.opa
-
-```
-
-The matrix containing the outlier profiles is called `profileMatrix` and can be accessed using the $ operator.
-The `upper.quantile` and `lower.quantile` parameters used to run the function can also be retrieved using this
-operator.
-
-```{r}
-bcm.opa$profileMatrix[1:6,1:5]
-bcm.opa$upper.quantile
-bcm.opa$lower.quantile
-```
-
-Genes with high variations across samples, that also are outliers, may provide interesting insights into biological systems driving metastatatic spread of breat cancer tumors to other tissues. Here we select the top 500 genes with high variances.
-
-```{r}
-library(genefilter)
-gene.vars <- rowSds(exprs(e))
-# order genes with respect to standard deviations
-idx <- order(gene.vars, decreasing = TRUE)[1:500]
-sum(fData(e)$ID[idx] %in% rownames(bcm.opa$profileMatrix))
-
-idx2 <- which(rownames(bcm.opa$profileMatrix) %in% fData(e)$ID[idx])
-
-fData(e)$GeneSymbol[idx][which(fData(e)$ID[idx] %in% rownames(bcm.opa$profileMatrix))]
-```
-
-Below is a heatmap of the detected outlier probes . The heatmap suggests that outlier probes, which also have high variations across samples, have higher expression values in liver samples, but are expressed at low levels in other samples. These outlier probes can also cluster the liver samples together. This may suggests that breast cancer tumors metastasizing to liver may have a distinct outlier profile compared to tumors metastasizing to other tissues.
-
-```{r, fig.height = 7, fig.width = 7}
-
-# what are subtypes here
-library(RColorBrewer)
-library(gplots)
-subtypes <- unique(pData(e)$source_name_ch1)
-hmcol <- colorRampPalette(brewer.pal(9,"GnBu"))(100)
-cols <- palette(brewer.pal(8,"Dark2"))[as.numeric(pData(e)$source_name)]
-cols <- palette(brewer.pal(8,"Dark2"))[as.numeric(pData(e)$source_name)]
-
-heatmap.2(exprs(e)[rownames(exprs(e)) %in% rownames(bcm.opa$profileMatrix[idx2,]), ],
-					trace = "none",
-					ColSideColors = cols,
-					col = hmcol,
-					Rowv = TRUE,
-					Colv = TRUE,
-					labRow = fData(e)$GeneSymbol[rownames(exprs(e)) %in% rownames(bcm.opa$profileMatrix[idx2,])],
-					cexRow = 0.6)
-legend("topright",legend= as.character(subtypes),
-       fill=c("#E7298A","#7570B3","#E6AB02","gray40","#A6761D",
-       			 "#D95F02","#1B9E77","#66A61E"),
-       border=FALSE, bty="n", y.intersp = 0.8, cex=0.4)
-
-```
-
-## getSubtypeProbes()
-
-The outlier profile for liver samples can be extracted using `getSubtypeProbes`. One can then use this information to see what Gene Ontology (GO) terms or pathways these outliers are enriched for.
-
-
-```{r}
-#get the index of the samples taken from liver
-index <- which(pData(e)$source_name_ch1 == "liver")
-samples <- rownames(pData(e)[index,])
-samples <- match(samples, colnames(bcm.opa$profileMatrix))
-samples <- Reduce(c,samples)
-
-liver.subtype.outlier <- getSubtypeProbes(bcm.opa, samples)
-
-# matching probe names
-liver.subtype.withAnno <- lapply(liver.subtype.outlier,
-																function(x){
-																	droplevels(fData(e)$GeneSymbol[rownames(fData(e)) %in% x])
-																	})
-liver.subtype.withAnno
-
-```
-
-
-
-## getSampleOutlier()
-
-`getSampleOutlier` retrieves the individual outlier profiles for one or more samples. Either sample names, or their corresponding indices in the `profileMatrix` can be used to extract sample-specific profiles.
-Here, we retrieve the outlier profile for sample "GSM1124899"
-
-```{r}
-getSampleOutlier(bcm.opa, "GSM1124899")
-
-```
-
-
-
-----
+-----
 
 # Analysis of Tomlins et al. prostate cancer dataset
 
 Data was retrieved from GEO database, checked for normalization and subsetted according to procedure outlined
 in the mCOPA paper. In addition, probes with no annotation were removed. The `impute` package was used to impute the missing values using K-nearest neighbours method (k = 10). The subsetted dataset is available in the package as a sample data, and contains an ExpressionSet object, storing information on samples, genes and gene expressions. We apply `opa` on Tomlins et al. data, then use `getSubtypeProbes` to get all down- regulated and all up-regulated outliers.
 
-```{r, echo= FALSE, eval=FALSE}
-library(oppar)
-library(limma)
-library(GEOquery)
-cache(tomlins <- getGEO("GSE6099"), dir = "./data", "GSE6099")
-eset <- tomlins[[1]]
-eset <- eset[rownames(exprs(eset)) %in% prob.names, colnames(exprs(eset)) %in% sample.names]
-# remove probes with no gene annotation
-eset <- eset[-idx2,]
+`opa` returns the outlier profile matrix, which is a matrix of -1 ( for down-regulated outliers), 0 ( not an outlier) and 1 (up-regulated outlier). For more information see `?opa`
 
-library(impute)
-exprs(eset) <- impute.knn(exprs(eset))$data
-save(eset,file ="data/Tomlins.RData")
+For a brief overview of `oppar` package and functions, please see `?oppar`
+
+```{r, echo=FALSE}
+require(knitr)
+knitr::opts_chunk$set(message = FALSE, 
+											library(oppar), 
+											suppressPackageStartupMessages(library(Biobase)),
+											suppressPackageStartupMessages(library(limma)),
+											suppressPackageStartupMessages(library(GO.db)),
+											suppressPackageStartupMessages(library(org.Hs.eg.db))
+											)
 
 ```
 
 ```{r}
-library(oppar)
 data(Tomlins) # loads processed Tomlins data
 
 # the first 21 samples are Normal samples, and the rest of 
@@ -207,9 +79,32 @@ g
 tomlins.opa <- opa(eset, group = g, lower.quantile = 0.1)
 tomlins.opa
 
-# use getSubtypeProbes() to extract all down-regulated and all up-regulated outliers
+```
+
+The matrix containing the outlier profiles is called `profileMatrix` and can be accessed using the $ operator.
+The `upper.quantile` and `lower.quantile` parameters used to run the function can also be retrieved using this
+operator.
+
+```{r}
+tomlins.opa$profileMatrix[1:6,1:5]
+tomlins.opa$upper.quantile
+tomlins.opa$lower.quantile
+```
+
+We can extract outlier profiles for any individual samples in the `profileMatrix`, using `getSampleOutlier`. see `?getSampleOutlier` for more detailed information
+
+```{r}
+getSampleOutlier(tomlins.opa, c(1,5))
+
+```
+
+
+Extracting down-regulated and up-regulated outliers in all samples using `getSubtypeProbes`:
+```{r}
+
 outlier.list <- getSubtypeProbes(tomlins.opa, 1:ncol(tomlins.opa$profileMatrix))
 ```
+
 
 We can then obtain a list of GO terms from `org.Hs.eg.db`. Each element of the list will be a GO terms with the Entrez gene IDs corresponding to that term. We can the apply `mroast` from `limma` package for multiple gene set enrichment testing.
 
@@ -297,11 +192,57 @@ head(down_mroast, n=5)
 
 And extract GO terms for the top 10 results:
 ```{r}
+
 go_terms_down <- rownames(down_mroast[1:10,])
 
 dr2tab <- select(GO.db, keys=go_terms_down,
                 columns=c("GOID","TERM"), 
                 keytype="GOID")
 dr2tab
+
+```
+
+
+-----
+# Gene Set Enrichment Analysis 
+
+We are now going to perform enrichment analysis for on Maupin's TGFb data (see `?maupin`), given a gene signature. The `maupin` data object contains a matrix containing gene expression measurements on 3 control samples and 3 TGFb samples.
+We run the modified gsva function introduced in this package to get one large positive scores for samples enriched in the given gene signature, both for down gene signature and up gene signature. This is while the original gsva function
+returns negative scores for samples that are enriched in down gene signature, and positive scores for samples enriched in up gene signature. Therefore, the scores returned by the gsva function in this package are the sum of the scores for up gene signature and down gene signature. Note that in order for the modified version of the gsva function to work properly, the `gset.idx.list` has to be a named list, with the up signature gene list being named 'up' and down gene signature gene list being names 'down' (see example code below). Also note that the `is.gset.list.up.down` argument has to be set to TRUE if the user wishes to use the modified version (i.e to get the sum of es scores for up and down gene signatures). See `?gsva` for more details.
+
+```{r}
+data("Maupin")
+names(maupin)
+head(maupin$data)
+head(maupin$sig)
+
+geneSet<- maupin$sig$EntrezID    #Symbol  ##EntrezID # both up and down genes:
+
+up_sig<- maupin$sig[maupin$sig$upDown == "up",]
+d_sig<- maupin$sig[maupin$sig$upDown == "down",]
+u_geneSet<- up_sig$EntrezID   #Symbol   # up_sig$Symbol  ## EntrezID
+d_geneSet<- d_sig$EntrezID
+
+cache(es.dif <- gsva(maupin$data, list(up = u_geneSet, down= d_geneSet), mx.diff=1,
+               verbose=TRUE, abs.ranking=FALSE, is.gset.list.up.down=TRUE )$es.obs,
+			dir = "data/", prefix = "")
+
+
+head(es.dif)
+
+## calculating enrichment scores using ssgsea method
+# es.dif.ssg <- gsva(maupin, list(up = u_geneSet, down= d_geneSet),
+# 														 verbose=TRUE, abs.ranking=FALSE, is.gset.list.up.down=TRUE,
+# 														 method = "ssgsea")
+```
+
+A histogram of enrichment scores is plotted below and the density of es scores for TGFb samples is shown in red. The distribution of es scores of control samples is shown in blue. As it can be seen from the plot below, TGFb scores that are expected to be enriched in the given TGFb signature have recieved positive scores and are on the right side of the histogram, whereas the control samples are on the left side of the histogram. In addition, TGFb samples and contorl samples have been nicely separated from each other.
+
+```{r, fig.width= 6, fig.height= 5, fig.align= "center"}
+hist(es.dif, main = "enrichment scores", xlab="es")
+lines(density(es.dif[,1:3]), col = "blue") # control samples
+lines(density(es.dif[,4:6]), col = "red") # TGFb samples
+legend("topleft", c("Control","TGFb"), lty = 1, col=c("blue","red"), cex = 0.6)
+
 
 ```

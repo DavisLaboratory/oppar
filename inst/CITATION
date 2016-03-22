@@ -1,0 +1,24 @@
+citHeader("To cite oppar in publications use:")
+
+citEntry(entry = "Article",
+  title        = "mCOPA: analysis of heterogeneous features in cancer expression data",
+  author       = personList(as.person("Chenwei Wang"),
+                   as.person("Alperen Taciroglu"),
+                   as.person("Stefan R Maetschke"),
+                   as.person("Colleen C Nelson"),
+                   as.person("Mark A Ragan"),
+                   as.person("Melissa J Davis")),
+  journal      = "Journal of Clinical Bioinformatics",
+  year         = "2012",
+  volume       = "2",
+  number       = "22",
+  pages        = "",
+  url          = "http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3553066/",
+
+  textVersion  =
+  paste("Wang, C., Taciroglu, A., Maetschke, S. R., Nelson, C. C., Ragan, ",
+        "M. A., & Davis, M. J. (2012).",
+        "mCOPA: analysis of heterogeneous features in cancer expression data.",
+        "Journal of Clinical Bioinformatics, 2, 22.",
+        "http://doi.org/10.1186/2043-9113-2-22")
+)

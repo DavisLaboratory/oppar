@@ -35,15 +35,14 @@ and sample.names = \code{nuchar}
 and sample.names = \code{nuchar}
 }}
 \examples{
-data(GSE46141g)
-eset <- g[[1]]
+data(GSE46141)
 library(Biobase)
-group <- sapply(pData(eset)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
+group <- sapply(pData(e)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
 group <- factor(group)
-bcm.opa <- opa(eset,group=group)
+bcm.opa <- opa(e,group=group)
 # extracting liver samples
-index <- which(pData(eset)$source_name_ch1 == "liver")
-samples <- rownames(pData(eset)[index,])
+index <- which(pData(e)$source_name_ch1 == "liver")
+samples <- rownames(pData(e)[index,])
 samples <- match(samples, colnames(bcm.opa$profileMatrix))
 samples <- Reduce(c,samples)
 # liver subtype outlier profile
