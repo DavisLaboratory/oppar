@@ -21,5 +21,5 @@ For a complete example workflow, and to learn about how `oppar` works, please re
 To report bugs or for any other enquiries, please email hediyehzadeh.s@wehi.edu.au
 
 **Release notes:**
-The modified `gsva` function for Gene Set Enrichment Analysis is now available. Several Examples are provided in the [Wiki](https://github.com/DavisLaboratory/oppar/wiki) for GSEA. It has also been demonstrated that how `oppar` can be used in conjuction with other packages such as `limma` for gene set testing. In addition, examples on how to apply `oppar` tools are provided in man/help pages. See also `help(package = "oppar)`.
+The modified `gsva` function for Gene Set Enrichment Analysis is now available. Several Examples are provided in the [Wiki](https://github.com/DavisLaboratory/oppar/wiki) for GSEA. It has also been demonstrated that how `oppar` can be used in conjuction with other packages such as `limma` for gene set testing. In addition, examples on how to apply `oppar` tools are provided in man/help pages. See also `help(package = "oppar")`.
 
