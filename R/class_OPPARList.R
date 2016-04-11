@@ -15,6 +15,8 @@ setClass("OPPARList",
 
 #' @param object An object of type OPPARList
 #' @describeIn OPPARList A show method for objects of class OPPARList
+#' @return returns the number of outlier features detected, the number of samples retained,
+#'     and the parameters used to run the \code{opa} function
 #' @export
 setMethod("show","OPPARList", function(object){
 	cat("Object of type OPPARList", sep="\n")
@@ -30,8 +32,9 @@ setMethod("show","OPPARList", function(object){
 })
 
 
-#' @param x Object of type OPPARList
-#' @param name Name of the slot to access
+#' @param x Object of type OPPARList.
+#' @param name Name of the slot to access.
+#' @return extracts slots from an object of type \code{OPPARList}.
 #' @describeIn OPPARList A method to extract slots in \code{OPPARList}
 #' @export
 setMethod("$", "OPPARList", function(x, name){

@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Cancer Outlier Profile Analysis (COPA) is a common analysis to identify genes that might be down-regulated or up-regulated only in a proportion of samples with the codition of interest. OPPAR is the R implementation of modified COPA [(mCOPA)](http://jclinbioinformatics.biomedcentral.com/articles/10.1186/2043-9113-2-22) method, originally published by Chenwei Wang et la. in 2012. The aim is to identify genes that are outliers in samples with condition of interest, compared to normal samples. The methods implemented in OPPAR enable the users to perform the analysis in various ways, namely detecting outlier features in control versus condition samples (whether or not there is a information on subtypes), and detecting genes that are outlier in one subtype compared to the other samples, if the subtypes are known. 
+Cancer Outlier Profile Analysis (COPA) is a common analysis to identify genes that might be down-regulated or up-regulated only in a proportion of samples with the codition of interest. OPPAR is the R implementation of modified COPA [(mCOPA)](http://jclinbioinformatics.biomedcentral.com/articles/10.1186/2043-9113-2-22) method, originally published by Chenwei Wang et al. in 2012. The aim is to identify genes that are outliers in samples with condition of interest, compared to normal samples. The methods implemented in OPPAR enable the users to perform the analysis in various ways, namely detecting outlier features in control versus condition samples (whether or not there is a information on subtypes), and detecting genes that are outlier in one subtype compared to the other samples, if the subtypes are known. 
 
 OPPAR can also be used for Gene Set Enrichment Analysis (GSEA). Here, a modified version of [GSVA](http://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7) method is implemented. GSVA can be used to determine which samples in the study are enriched for gene expression signatures that are of interest. The `gsva` function in GSVA package returns an enrichment score for each sample, for the given signatures/gene sets. With the current implementation of the method, samples that strongly show enrichment for down(-regulated) gene expression signatures will receive negative scores.
 However, Often it is in the interest of the biologists and researchers to get positive scores for samples that are enriched in both up and down signatures. Therefore, the `gsva` function has been modified to assign positive scores to samples that are enriched for the up-regulated and down-regulated gene expression signatures.
@@ -25,7 +25,7 @@ OPPAR comes with four functions:
     However, it is often of interest of researchers to obtain positive scores 
     for samples that are enriched in both up gene signatures and down gene signatures.
     In the modified version the ranking is reversed for the genes in down gene signature,
-    such that they recieve high ranks and, therefore, high es scores. The es scores for 
+    such that they receive high ranks and, therefore, high es scores. The es scores for 
     samples in down gene signature is then added to the es scores in up gene signature
     resulting in large positive es scores for samples displaying enrichment in both up-
     regulated genes and down-regulated genes in a given gene signature.
@@ -206,7 +206,7 @@ dr2tab
 -----
 # Gene Set Enrichment Analysis 
 
-We are now going to perform enrichment analysis for on Maupin's TGFb data (see `?maupin`), given a gene signature. The `maupin` data object contains a matrix containing gene expression measurements on 3 control samples and 3 TGFb samples.
+We are now going to perform enrichment analysis for on Maupin's TGFb data (see `?maupin`), given a gene signature. The `maupin` data object contains a matrix containing gene expression measurements on 3 control samples and 3 TGFb induced samples.
 We run the modified gsva function introduced in this package to get one large positive scores for samples enriched in the given gene signature, both for down gene signature and up gene signature. This is while the original gsva function
 returns negative scores for samples that are enriched in down gene signature, and positive scores for samples enriched in up gene signature. Therefore, the scores returned by the gsva function in this package are the sum of the scores for up gene signature and down gene signature. Note that in order for the modified version of the gsva function to work properly, the `gset.idx.list` has to be a named list, with the up signature gene list being named 'up' and down gene signature gene list being names 'down' (see example code below). Also note that the `is.gset.list.up.down` argument has to be set to TRUE if the user wishes to use the modified version (i.e to get the sum of es scores for up and down gene signatures). See `?gsva` for more details.
 
@@ -223,12 +223,12 @@ d_sig<- maupin$sig[maupin$sig$upDown == "down",]
 u_geneSet<- up_sig$EntrezID   #Symbol   # up_sig$Symbol  ## EntrezID
 d_geneSet<- d_sig$EntrezID
 
-cache(es.dif <- gsva(maupin$data, list(up = u_geneSet, down= d_geneSet), mx.diff=1,
-               verbose=TRUE, abs.ranking=FALSE, is.gset.list.up.down=TRUE )$es.obs,
-			dir = "data/", prefix = "")
+enrichment_scores <- gsva(maupin$data, list(up = u_geneSet, down= d_geneSet), mx.diff=1,
+               verbose=TRUE, abs.ranking=FALSE, is.gset.list.up.down=TRUE, parallel.sz = 1 )$es.obs
+			
 
 
-head(es.dif)
+head(enrichment_scores)
 
 ## calculating enrichment scores using ssgsea method
 # es.dif.ssg <- gsva(maupin, list(up = u_geneSet, down= d_geneSet),
@@ -236,12 +236,12 @@ head(es.dif)
 # 														 method = "ssgsea")
 ```
 
-A histogram of enrichment scores is plotted below and the density of es scores for TGFb samples is shown in red. The distribution of es scores of control samples is shown in blue. As it can be seen from the plot below, TGFb scores that are expected to be enriched in the given TGFb signature have recieved positive scores and are on the right side of the histogram, whereas the control samples are on the left side of the histogram. In addition, TGFb samples and contorl samples have been nicely separated from each other.
+A histogram of enrichment scores is plotted below and the density of es scores for TGFb samples is shown in red. The distribution of es scores of control samples is shown in blue. As it can be seen from the plot below, TGFb induced samples that are expected to be enriched in the given TGFb signature have received positive scores and are on the right side of the histogram, whereas the control samples are on the left side of the histogram. In addition, TGFb induced samples and contorl samples have been nicely separated from each other.
 
 ```{r, fig.width= 6, fig.height= 5, fig.align= "center"}
-hist(es.dif, main = "enrichment scores", xlab="es")
-lines(density(es.dif[,1:3]), col = "blue") # control samples
-lines(density(es.dif[,4:6]), col = "red") # TGFb samples
+hist(enrichment_scores, main = "enrichment scores", xlab="es")
+lines(density(enrichment_scores[,1:3]), col = "blue") # control samples
+lines(density(enrichment_scores[,4:6]), col = "red") # TGFb samples
 legend("topleft", c("Control","TGFb"), lty = 1, col=c("blue","red"), cex = 0.6)
 
 

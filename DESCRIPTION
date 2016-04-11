@@ -1,8 +1,8 @@
 Package: oppar
 Type: Package
 Title: Outlier profile and pathway analysis in R
-Version: 0.99.0
-Date: 2012
+Version: 0.99.5
+Date: 2016
 Authors@R: c(
     person("Chenwei", "Wang", email = "chenwei.wang@qut.edu.au", role = "aut"),
     person("Alperen", "Taciroglu", role = "aut"),
@@ -14,9 +14,9 @@ Authors@R: c(
     person("Momeneh","Foroutan", email= "mforoutan@student.unimelb.edu.au", role = "ctr"))
 Description: A R implementation of mCOPA package published by Wang et al.
     (2012).
-biocViews: Pathways, GeneSetEnrichment, SystemsBiology, Software
+biocViews: Pathways, GeneSetEnrichment, SystemsBiology, GeneExpression, Software
 Depends:
-    R (>= 3.2)
+    R (>= 3.3)
 Imports:
     Biobase,
     methods,
@@ -27,13 +27,9 @@ LazyData: true
 Collate:
     'class_OPPARList.R'
     'class_nuchar.R'
-    'e.R'
-    'es.dif.R'
-    'eset.R'
     'getSampleOutlier.R'
     'getSubtypeProbes.R'
     'gsva.R'
-    'maupin.R'
     'opa-generic-methods.R'
     'oppar.R'
     'utils.R'
@@ -44,5 +40,7 @@ Suggests:
     rmarkdown,
     limma,
     org.Hs.eg.db,
-    GO.db
+    GO.db,
+    snow,
+    parallel
 VignetteBuilder: knitr

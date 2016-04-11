@@ -15,9 +15,9 @@ NULL
 #' @examples
 #' data(GSE46141)
 #' library(Biobase)
-#' group <- sapply(pData(e)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
+#' group <- sapply(pData(bcm)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
 #' group <- factor(group)
-#' bcm.opa <- opa(e,group=group)
+#' bcm.opa <- opa(bcm,group=group)
 #' # Outlier profile for sample "GSM1124929"
 #' getSampleOutlier(bcm.opa, "GSM1124929")
 #'

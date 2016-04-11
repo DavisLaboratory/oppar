@@ -121,7 +121,13 @@ this last normalization step is skipped.}
 
 \item{verbose}{Gives information about each calculation step. Default: \code{FALSE}.}
 
-\item{is.gset.list.up.down}{logical. Is the gene list divided into up/down sublists?}
+\item{is.gset.list.up.down}{logical. Is the gene list divided into up/down sublists?
+Please note that it is important to name the up-regulated gene set list 'up', and
+the down-regulated gene set list to 'down', if this argument is used (e.g
+gset = list(up = up_gset, down = down_gset))}
+}
+\value{
+returns gene set enrichment scores for each sample and gene set
 }
 \description{
 Gene Set Variation Analysis
@@ -144,13 +150,9 @@ up_sig<- maupin$sig[maupin$sig$upDown == "up",]
 d_sig<- maupin$sig[maupin$sig$upDown == "down",]
 u_geneSet<- up_sig$EntrezID   #Symbol   # up_sig$Symbol  ## EntrezID
 d_geneSet<- d_sig$EntrezID
-#cache(es.dif <- gsva(maupin$data, list(up = u_geneSet, down= d_geneSet), mx.diff=1,
-#    verbose=TRUE, abs.ranking=FALSE, is.gset.list.up.down=TRUE )$es.obs,
-#    dir = "data/", prefix = "")
+es.dif <- gsva(maupin$data, list(up = u_geneSet, down= d_geneSet), mx.diff=1,
+    verbose=TRUE, abs.ranking=FALSE, is.gset.list.up.down=TRUE, parallel.sz = 1 )$es.obs
 
-## using cached gsva output
-data(es.dif)
-head(es.dif)
 }
 \seealso{
 Hanzelmann, S., Castelo, R., & Guinney, J. (2013). GSVA: gene set variation analysis for

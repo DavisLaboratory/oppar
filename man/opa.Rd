@@ -50,16 +50,16 @@ that the gene is a down-regulated outlier, 1 indicates an up-regulate outlier an
 \item \code{ExpressionSet}: opa(eset, group, lower.quantile = 0.05, upper.quantile = 0.95)
 }}
 \examples{
-# loading eset object from GSE46141 dataset
+# loading bcm object from GSE46141 dataset
 data(GSE46141)
 library(Biobase)
 # defining the group variable. local breast tumors are the controls
 # and the rest of the samples are the diseased samples
-group <- sapply(pData(e)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
+group <- sapply(pData(bcm)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
 group <- factor(group)
 # running opa with default values (i.e upper.quantile = 0.95, lower.quantile = 0.05)
 # the result is an object of type OPPARList
-opa(e,group = group)
+opa(bcm,group = group)
 }
 \seealso{
 Wang, C., Taciroglu, A., Maetschke, S. R., Nelson, C. C., Ragan, M. A., & Davis, M. J. (2012).

@@ -14,9 +14,15 @@
 \arguments{
 \item{object}{An object of type OPPARList}
 
-\item{x}{Object of type OPPARList}
+\item{x}{Object of type OPPARList.}
 
-\item{name}{Name of the slot to access}
+\item{name}{Name of the slot to access.}
+}
+\value{
+returns the number of outlier features detected, the number of samples retained,
+    and the parameters used to run the \code{opa} function
+
+extracts slots from an object of type \code{OPPARList}.
 }
 \description{
 A S4 class for the output of OPPAR main function, opa.

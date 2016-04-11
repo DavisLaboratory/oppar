@@ -14,12 +14,12 @@ NULL
 #' @examples
 #' data(GSE46141)
 #' library(Biobase)
-#' group <- sapply(pData(e)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
+#' group <- sapply(pData(bcm)$source_name_ch1, function(x){ ifelse(x == "breast",0,1)})
 #' group <- factor(group)
-#' bcm.opa <- opa(e,group=group)
+#' bcm.opa <- opa(bcm,group=group)
 #' # extracting liver samples
-#' index <- which(pData(e)$source_name_ch1 == "liver")
-#' samples <- rownames(pData(e)[index,])
+#' index <- which(pData(bcm)$source_name_ch1 == "liver")
+#' samples <- rownames(pData(bcm)[index,])
 #' samples <- match(samples, colnames(bcm.opa$profileMatrix))
 #' samples <- Reduce(c,samples)
 #' # liver subtype outlier profile
