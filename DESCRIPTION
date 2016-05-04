@@ -1,7 +1,7 @@
 Package: oppar
 Type: Package
 Title: Outlier profile and pathway analysis in R
-Version: 0.99.5
+Version: 0.99.8
 Date: 2016
 Authors@R: c(
     person("Chenwei", "Wang", email = "chenwei.wang@qut.edu.au", role = "aut"),
@@ -12,8 +12,11 @@ Authors@R: c(
     person("Melissa", "Davis", email = "davis.m@wehi.edu.au", role = "aut"),
     person("Soroor", "Hediyeh zadeh", email = "hediyehzadeh.s@wehi.edu.au",role = "cre"),
     person("Momeneh","Foroutan", email= "mforoutan@student.unimelb.edu.au", role = "ctr"))
-Description: A R implementation of mCOPA package published by Wang et al.
-    (2012).
+Description: The R implementation of mCOPA package published by Wang et al.
+    (2012). Oppar provides methods for Cancer Outlier profile Analysis. Although
+    initially developed to detect outlier genes in cancer studies, methods presented
+    in oppar can be used for outlier profile analysis in general. In addition,
+    tools are provided for gene set enrichment and pathway analysis.
 biocViews: Pathways, GeneSetEnrichment, SystemsBiology, GeneExpression, Software
 Depends:
     R (>= 3.3)
