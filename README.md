@@ -3,6 +3,13 @@
 
 OPPAR is the R implementation of the modified Cancer Outlier Profile Analysis [(mCOPA)](http://jclinbioinformatics.biomedcentral.com/articles/10.1186/2043-9113-2-22) method, published by Wang et al. in 2012.
 
+**oppar is now available on Bioconductor**
+
+```{r}
+source("https://bioconductor.org/biocLite.R")
+biocLite("oppar")
+
+```
 
 ### Download Instructions
 
